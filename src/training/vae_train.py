@@ -40,10 +40,10 @@ def train_vae(config_path: str):
         hidden_dims=config['hidden_dims'],
         image_size=config['image_size']
     )
-    
+
     model = model.to(device)
     # Use DataParallel for multiple GPUs
-    if torch.cuda.device_count() > 1:
+    if torch.cuda.device_count() > 3:
         model = torch.nn.DataParallel(model)
     
     
