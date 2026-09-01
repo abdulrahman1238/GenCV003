@@ -93,10 +93,12 @@ def train_ddpm(config_path: str):
     )
     
     # Use DataParallel for multiple GPUs
+    ddpm = ddpm.to(device)
+
     if torch.cuda.device_count() > 1:
         ddpm = torch.nn.DataParallel(ddpm)
     
-    ddpm = ddpm.to(device)
+    
     
     # Count parameters
     num_params = sum(p.numel() for p in ddpm.parameters())
