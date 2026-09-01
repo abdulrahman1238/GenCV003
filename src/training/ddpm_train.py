@@ -136,6 +136,7 @@ def train_ddpm(config_path: str):
             # Forward pass: compute loss
             # ddpm.forward(data) internally calls compute_loss(data)
             loss = ddpm(data)
+            loss = loss.mean()
             
             # Backward pass
             optimizer.zero_grad()
