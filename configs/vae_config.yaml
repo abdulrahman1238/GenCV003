@@ -1,0 +1,20 @@
+# ===========================================================================
+# VAE Configuration for CIFAR-10
+# ===========================================================================
+
+# Dataset
+dataset: cifar10
+image_size: 32
+channels: 3
+normalize_range: '01'  # VAE uses [0, 1] with sigmoid output
+
+# Model Architecture
+latent_dim: 128
+hidden_dims: [64, 128, 256]
+
+# Training
+batch_size: 128
+learning_rate: 1.0e-3
+epochs: 50
+kl_weight: 1.0e-4  # KL annealing weight (prevents posterior collapse)
+seed: 42

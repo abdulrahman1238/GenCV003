@@ -1,0 +1,33 @@
+# ===========================================================================
+# DDPM Configuration for CIFAR-10
+# ===========================================================================
+
+# Dataset
+dataset: cifar10
+image_size: 32
+channels: 3
+normalize_range: '-11'  # DDPM uses [-1, 1]
+
+# Training
+batch_size: 64         
+learning_rate: 2.0e-4
+epochs: 100
+seed: 42
+
+# DDPM Process
+timesteps: 1000
+beta_schedule: 'cosine'  # Better quality than linear
+beta_start: 1.0e-4
+beta_end: 0.02
+
+# U-Net Architecture
+unet_channels: [64, 128, 256]
+time_emb_dim: 128
+num_res_blocks: 2
+use_attention: true      # Self-attention at 8×8 resolution
+dropout: 0.1
+
+# Sampling During Training
+sample_every: 10         # Generate samples every N epochs
+num_sample_images: 64
+save_intermediate: true  # Save denoising trajectory
