@@ -43,7 +43,7 @@ def train_vae(config_path: str):
 
     model = model.to(device)
     # Use DataParallel for multiple GPUs
-    if torch.cuda.device_count() > 3:
+    if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
     
     
