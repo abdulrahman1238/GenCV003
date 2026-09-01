@@ -18,6 +18,8 @@ dependencies = [
     "torchvision>=0.20.1",
     "tqdm>=4.70.0",
 ]
+[tool.uv]
+package = false
 
 [project.scripts]
 gencv003 = "gencv003:main"
