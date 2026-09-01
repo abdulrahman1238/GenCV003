@@ -1,8 +1,8 @@
 """
-DDPM Training Script.
+DDPM Training Script with Checkpointing and Resuming.
 
 Trains a Denoising Diffusion Probabilistic Model on CIFAR-10.
-
+Supports saving checkpoints every 10 epochs and resuming training.
 """
 
 import torch
@@ -18,12 +18,13 @@ from src.models.ddpm import DDPM
 from src.data.dataset import get_cifar10_dataloaders
 
 
-def train_ddpm(config_path: str):
+def train_ddpm(config_path: str, resume: bool = False):
     """
     Main training function for DDPM.
     
     Args:
         config_path: Path to YAML config file
+        resume: If True, resume from the latest checkpoint in outputs/ddpm/
     """
     
     # =========================================================================
@@ -92,13 +93,10 @@ def train_ddpm(config_path: str):
         beta_end=config['beta_end'],
     )
     
-    # Use DataParallel for multiple GPUs
+    # Move to GPU FIRST, then wrap in DataParallel
     ddpm = ddpm.to(device)
-
     if torch.cuda.device_count() > 1:
         ddpm = torch.nn.DataParallel(ddpm)
-    
-    
     
     # Count parameters
     num_params = sum(p.numel() for p in ddpm.parameters())
@@ -111,20 +109,38 @@ def train_ddpm(config_path: str):
     optimizer = optim.Adam(ddpm.parameters(), lr=config['learning_rate'])
     
     # =========================================================================
+    # Resume Logic
+    # =========================================================================
+    
+    latest_checkpoint_path = output_dir / 'ddpm_latest.pth'
+    start_epoch = 1
+    history = {'epoch': [], 'loss': []}
+    
+    if resume and latest_checkpoint_path.exists():
+        print(f"\n🔄 Resuming training from {latest_checkpoint_path}...")
+        checkpoint = torch.load(latest_checkpoint_path, map_location=device)
+        
+        # Load states
+        ddpm.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Resume from the next epoch
+        start_epoch = checkpoint['epoch'] + 1
+        history = checkpoint['history']
+        
+        print(f"✅ Resumed successfully! Starting from epoch {start_epoch}/{config['epochs']}")
+    elif resume:
+        print(f"\n⚠️ Resume requested but no checkpoint found at {latest_checkpoint_path}. Starting from scratch.")
+    
+    # =========================================================================
     # Training Loop
     # =========================================================================
     
     print("\n" + "="*60)
-    print("Starting Training")
+    print(f"Starting Training (Epoch {start_epoch} to {config['epochs']})")
     print("="*60)
     
-    # Track training history
-    history = {
-        'epoch': [],
-        'loss': [],
-    }
-    
-    for epoch in range(1, config['epochs'] + 1):
+    for epoch in range(start_epoch, config['epochs'] + 1):
         ddpm.train()
         epoch_loss = 0.0
         num_batches = 0
@@ -134,9 +150,8 @@ def train_ddpm(config_path: str):
             data = data.to(device)
             
             # Forward pass: compute loss
-            # ddpm.forward(data) internally calls compute_loss(data)
             loss = ddpm(data)
-            loss = loss.mean()
+            loss = loss.mean()  # Crucial for DataParallel
             
             # Backward pass
             optimizer.zero_grad()
@@ -158,11 +173,29 @@ def train_ddpm(config_path: str):
         print(f'Epoch {epoch}: Loss = {avg_loss:.4f}')
         
         # =====================================================================
-        # Sampling and Visualization
+        # Checkpoint Saving (Every 10 Epochs)
+        # =====================================================================
+        
+        if epoch % 10 == 0:
+            checkpoint = {
+                'epoch': epoch,
+                'model_state_dict': ddpm.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'history': history,
+                'config': config
+            }
+            # Save latest checkpoint (for resuming)
+            torch.save(checkpoint, latest_checkpoint_path)
+            # Save a backup with the epoch number
+            torch.save(checkpoint, output_dir / f'ddpm_epoch_{epoch}.pth')
+            print(f"💾 Checkpoint saved at epoch {epoch}")
+        
+        # =====================================================================
+        # Sampling and Visualization (Every 10 Epochs)
         # =====================================================================
         
         if epoch % config['sample_every'] == 0:
-            print(f"\nGenerating samples at epoch {epoch}...")
+            print(f"\n🎨 Generating samples at epoch {epoch}...")
             
             # Get the actual DDPM (unwrap DataParallel if needed)
             actual_ddpm = ddpm.module if hasattr(ddpm, 'module') else ddpm
@@ -190,28 +223,21 @@ def train_ddpm(config_path: str):
             plt.close()
             print(f"Saved sample grid to {output_dir / f'samples_epoch_{epoch}.png'}")
             
-            # Save denoising trajectory (show progression for first 8 images)
+            # Save denoising trajectory
             if config['save_intermediate'] and len(intermediates) > 0:
-                # Take first 8 images from each intermediate step
                 trajectory = []
                 for step in intermediates:
-                    step_images = step[:8]  # First 8 images
+                    step_images = step[:8]
                     step_display = (step_images + 1.0) / 2.0
                     step_display = step_display.clamp(0, 1)
                     trajectory.append(step_display)
                 
-                # Stack all steps: [num_steps, 8, C, H, W]
                 trajectory = torch.stack(trajectory, dim=0)
-                
-                # Reshape to show as grid: [num_steps * 8, C, H, W]
-                # Each row shows one timestep, each column shows one image
                 num_steps = trajectory.shape[0]
                 num_images = trajectory.shape[1]
                 
-                # Create a grid where rows = timesteps, cols = images
                 trajectory_flat = trajectory.reshape(-1, 3, 32, 32)
-                grid = vutils.make_grid(trajectory_flat.cpu(), 
-                                       nrow=num_images, padding=2)
+                grid = vutils.make_grid(trajectory_flat.cpu(), nrow=num_images, padding=2)
                 
                 plt.figure(figsize=(16, num_steps * 2))
                 plt.imshow(grid.permute(1, 2, 0))
@@ -234,10 +260,10 @@ def train_ddpm(config_path: str):
     print("Training Complete")
     print("="*60)
     
-    # Save model checkpoint
-    checkpoint_path = output_dir / 'ddpm_final.pth'
-    torch.save(ddpm.state_dict(), checkpoint_path)
-    print(f"Model saved to {checkpoint_path}")
+    # Save final model checkpoint
+    final_checkpoint_path = output_dir / 'ddpm_final.pth'
+    torch.save(ddpm.state_dict(), final_checkpoint_path)
+    print(f"Final model saved to {final_checkpoint_path}")
     
     # Save training history
     history_path = output_dir / 'training_history.yaml'
@@ -265,6 +291,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='configs/ddpm_cifar10.yaml')
+    parser.add_argument('--resume', action='store_true', help='Resume training from latest checkpoint')
     args = parser.parse_args()
     
-    train_ddpm(args.config)
+    train_ddpm(args.config, resume=args.resume)
