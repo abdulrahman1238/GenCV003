@@ -32,7 +32,7 @@ def vae_loss(
         recon_loss = F.binary_cross_entropy(x_recon, x, reduction='mean') 
     elif recon_loss_type == 'mse':
         # Mean Squared Error
-        recon_loss = F.mse_loss(x_recon, x, reduction='sum')
+        recon_loss = F.mse_loss(x_recon, x, reduction='mean')
     else:
         raise ValueError(f"Unknown recon_loss_type: {recon_loss_type}")
     
