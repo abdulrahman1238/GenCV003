@@ -29,7 +29,7 @@ def vae_loss(
     # Reconstruction loss
     if recon_loss_type == 'bce':
         # Binary Cross-Entropy (expects inputs in [0,1])
-        recon_loss = F.binary_cross_entropy(x_recon, x, reduction='mean') 
+        recon_loss = F.binary_cross_entropy(x_recon, x, reduction="none").flatten(1).sum(1).mean()
     elif recon_loss_type == 'mse':
         # Mean Squared Error
         recon_loss = F.mse_loss(x_recon, x, reduction='mean')
@@ -38,7 +38,7 @@ def vae_loss(
     
     # KL Divergence: -0.5 * sum(1 + log(σ²) - μ² - σ²)
     # This is the analytical KL between N(μ, σ²) and N(0, I)
-    kl_loss = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()) 
+    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1).mean()
     
     # Total loss
     total_loss = recon_loss + kl_weight * kl_loss
