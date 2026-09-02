@@ -63,7 +63,7 @@ The notebook contains the complete workflow for:
 
 Trained model weights are stored in:
 
-**[Download `weights`](https://drive.google.com/drive/folders/11VH0D5ET8h6PYtCCorh3d2kOUIjeb4vF?usp=drive_link)**
+**[Download `weights`](https://drive.google.com/file/d/1p-VxjwIwe9lPy4GVJLkCCtaj12LNZvYS/view?usp=sharing)**
 
 ## Report
 
