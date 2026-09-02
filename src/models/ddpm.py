@@ -171,13 +171,15 @@ class DDPM(nn.Module):
         # Predict noise using U-Net
         eps_theta = self.model(x_t, t)
         
-        # Compute mean of the reverse distribution
         sqrt_recip_alpha = self.sqrt_recip_alphas[t].view(-1, 1, 1, 1)
-        posterior_mean_coef1 = self.posterior_mean_coef1[t].view(-1, 1, 1, 1)
-        posterior_mean_coef2 = self.posterior_mean_coef2[t].view(-1, 1, 1, 1)
+        beta_t = self.betas[t].view(-1, 1, 1, 1)
+        sqrt_one_minus_alpha_cumprod = (
+            self.sqrt_one_minus_alphas_cumprod[t]
+            .view(-1, 1, 1, 1)
+        )
         
         mean = sqrt_recip_alpha * (
-            x_t - posterior_mean_coef1 * eps_theta
+            x_t - (beta_t / sqrt_one_minus_alpha_cumprod) * eps_theta
         )
         
         # Add noise (except at t=0)
