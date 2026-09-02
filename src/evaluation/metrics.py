@@ -42,7 +42,7 @@ def denormalize_images(images: torch.Tensor, normalize_range: str) -> torch.Tens
 def compute_fid(
     sample_fn: Callable[[int, torch.device], torch.Tensor],
     real_images: torch.Tensor,
-    num_samples: int = 10000,
+    num_samples: int = 500,
     batch_size: int = 128,
     device: torch.device = torch.device('cuda'),
     model_normalize_range: str = '01'
@@ -108,7 +108,7 @@ def compute_fid(
 
 def compute_inception_score(
     sample_fn: Callable[[int, torch.device], torch.Tensor],
-    num_samples: int = 10000,
+    num_samples: int = 500,
     batch_size: int = 128,
     device: torch.device = torch.device('cuda'),
     model_normalize_range: str = '01'
@@ -189,14 +189,14 @@ def compute_all_metrics(
     fid = compute_fid(
         sample_fn, 
         real_images, 
-        num_samples=10000, 
+        num_samples=500, 
         device=device,
         model_normalize_range=model_normalize_range
     )
     
     is_mean, is_std = compute_inception_score(
         sample_fn, 
-        num_samples=10000, 
+        num_samples=500, 
         device=device,
         model_normalize_range=model_normalize_range
     )
