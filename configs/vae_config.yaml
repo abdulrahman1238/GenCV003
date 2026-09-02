@@ -16,5 +16,5 @@ hidden_dims: [64, 128, 256]
 batch_size: 128
 learning_rate: 1.0e-3
 epochs: 50
-kl_weight: 1.0e-4  # KL annealing weight (prevents posterior collapse)
+kl_weight: 1.0
 seed: 42
