@@ -14,6 +14,7 @@ GenCV003/
 │   └── evaluation/       # FID, Inception Score and visualization
 ├── notebooks/
 │   └── gencv003.ipynb    # Training, evaluation and results
+    └── GenCV003_DDPM_evaluation.ipynb # contain updated evaluate result
 ├── pyproject.toml        # Project dependencies
 ├── Gencv003_report.pdf 
 └── uv.lock               # Locked dependencies
