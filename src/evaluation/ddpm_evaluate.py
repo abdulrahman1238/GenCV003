@@ -266,9 +266,15 @@ def evaluate_ddpm(config_path: str, checkpoint_path: str):
         beta_end=config['beta_end'],
     )
     
-    # Load checkpoint
-    state_dict = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     
+    # Extract the actual model weights from the checkpoint dictionary
+    if 'model_state_dict' in checkpoint:
+        state_dict = checkpoint['model_state_dict']
+        print(f"✅ Loaded checkpoint from epoch {checkpoint.get('epoch', 'unknown')}")
+    else:
+        state_dict = checkpoint  # Fallback if it's just a raw state_dict
+        
     # Handle DataParallel checkpoint (remove 'module.' prefix)
     if any(k.startswith('module.') for k in state_dict.keys()):
         new_state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
