@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import torchvision.utils as vutils
 from tqdm import tqdm
 
-from src.models.unet import UNet
+from src.models.ddpm_unet import UNet
 from src.models.ddpm import DDPM
 from src.data.dataset import get_cifar10_dataloaders
 from src.evaluation.metrics import compute_all_metrics
