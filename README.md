@@ -69,7 +69,7 @@ Trained model weights are stored in:
 
 The detailed project report is available in:
 
-**[Project Report — PDF](https://drive.google.com/file/d/1Kjx8K0U-KNG6FOtvyWU7HxzAcNEEARlD/view?usp=drive_link)**
+**[Project Report — PDF](https://drive.google.com/file/d/1p-VxjwIwe9lPy4GVJLkCCtaj12LNZvYS/view?usp=drive_link)**
 
 
 It explains the VAE and DDPM architectures, implementation, training process, evaluation, results, limitations, and the main differences between the two approaches.
