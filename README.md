@@ -15,6 +15,7 @@ GenCV003/
 ├── notebooks/
 │   └── gencv003.ipynb    # Training, evaluation and results
 ├── pyproject.toml        # Project dependencies
+├── Gencv003_report.pdf 
 └── uv.lock               # Locked dependencies
 ```
 
